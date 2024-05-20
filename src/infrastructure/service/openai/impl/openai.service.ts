@@ -10,7 +10,7 @@ import { HttpService } from '@nestjs/axios';
 @Injectable()
 export class OpenAIService implements IOpenAIService {
   private readonly openAi: OpenAI;
-  private readonly engineModel: string = 'gpt-4o';
+  private readonly engineModel: string = 'gpt-4-turbo';
 
   constructor(
     @Inject(SALESFORCE_REPOSITORY)
@@ -28,6 +28,14 @@ export class OpenAIService implements IOpenAIService {
       return thread.id;
     } catch (error) {
       throw new Error(`Error creating assistant and thread: ${error.message}`);
+    }
+  }
+
+  async deleteThread(threadId: string): Promise<void> {
+    try {
+      await this.openAi.beta.threads.del(threadId);
+    } catch (error) {
+      throw new Error(`Error deleting thread: ${error.message}`);
     }
   }
 

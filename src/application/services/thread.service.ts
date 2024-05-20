@@ -29,6 +29,10 @@ export class ThreadService implements IThreadService {
     private readonly threadRepository: IThreadRepository,
   ) {}
 
+  async findAll(): Promise<IThread[]> {
+    return await this.threadRepository.findAll();
+  }
+
   findThreadById(threadId: string): Promise<IThread> {
     throw new Error('Method not implemented.');
   }
@@ -70,7 +74,8 @@ export class ThreadService implements IThreadService {
     throw new Error('Method not implemented.');
   }
 
-  delete(threadId: string): Promise<void> {
-    throw new Error('Method not implemented.');
+  async delete(threadId: string): Promise<void> {
+    await this.openAiService.deleteThread(threadId);
+    await this.threadRepository.delete(threadId);
   }
 }

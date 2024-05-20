@@ -3,6 +3,7 @@ import { IThread } from '../thread.entity';
 
 export interface IThreadService {
   findThreadById(threadId: string): Promise<IThread>;
+  findAll(): Promise<IThread[]>;
   sendMessage(
     threadId: string,
     message: string,

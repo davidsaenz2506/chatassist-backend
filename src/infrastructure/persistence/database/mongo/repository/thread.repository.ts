@@ -12,17 +12,21 @@ export class MongoThreadRepository implements IThreadRepository {
     @InjectModel(Thread.name)
     private threadModel: Model<ThreadDocument>,
   ) {}
-  async findThreadById(threadId: string): Promise<IThread> {
+  findAll(): Promise<IThread[]> {
+    const threads = this.threadModel.find();
+    return threads;
+  }
+  async findThreadById(id: string): Promise<IThread> {
     throw new Error('Method not implemented.');
   }
   async create(thread: Partial<IThread>): Promise<IThread> {
     const createdThread = await this.threadModel.create(thread);
     return createdThread;
   }
-  async update(threadId: string, thread: Partial<IThread>): Promise<IThread> {
+  async update(id: string, thread: Partial<IThread>): Promise<IThread> {
     throw new Error('Method not implemented.');
   }
   async delete(threadId: string): Promise<void> {
-    throw new Error('Method not implemented.');
+    await this.threadModel.deleteOne({ threadId });
   }
 }

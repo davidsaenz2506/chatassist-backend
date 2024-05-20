@@ -7,6 +7,7 @@ export interface IOpenAIService {
     message: string,
   ): Promise<OpenAI.Beta.Threads.Messages.MessageContent>;
   createThread(): Promise<string>;
+  deleteThread(threadId: string): Promise<void>
   getAllThreadMessages(
     threadId: string,
   ): Promise<OpenAI.Beta.Threads.Messages.Message[]>;

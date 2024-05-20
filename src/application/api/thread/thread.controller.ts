@@ -41,6 +41,16 @@ export class ThreadController extends ApiController {
     }
   }
 
+  @Get('/')
+  async getAll(@Res() res: any): Promise<IThread[] | void> {
+    try {
+      const threads: IThread[] = await this.threadService.findAll();
+      return this.ok(res, threads);
+    } catch (error) {
+      return this.badrequest(error);
+    }
+  }
+
   @Post('/')
   async create(
     @Res() res: any,
@@ -107,7 +117,9 @@ export class ThreadController extends ApiController {
   async delete(@Res() res: any, @Param('thread_id') threadId): Promise<void> {
     try {
       await this.threadService.delete(threadId);
-      return this.ok(res, threadId);
+      return this.ok(res, {
+        message: 'Thread deleted successfully',
+      });
     } catch (error) {
       return this.badrequest(error);
     }
