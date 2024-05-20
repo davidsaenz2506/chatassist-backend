@@ -174,7 +174,9 @@ export class OpenAIService implements IOpenAIService {
     question: string,
   ): Promise<string> {
     const response = await this.httpService
-      .get(`${process.env.NGROK_COLAB_SERVER_URI}/questions/${question}`)
+      .get(
+        `${process.env.NGROK_COLAB_SERVER_URI}/questions/${encodeURI(question)}`,
+      )
       .toPromise();
 
     const answer = response.data.value.toString();
