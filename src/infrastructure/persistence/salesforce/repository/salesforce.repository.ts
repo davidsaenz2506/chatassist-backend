@@ -20,25 +20,28 @@ export class SalesforceRepository implements ISalesforceRepository {
 
     try {
       await this.connection.login(username, password);
-      console.log('Successfully logged in to Salesforce');
     } catch (error) {
       throw new Error(`Error logging in to Salesforce: ${error.message}`);
     }
   }
 
+  public async destroyOrderByOrderNumber(orderNumber: string): Promise<string> {
+    await this.login();
+
+    const orderByNumber = await this.connection
+      .sobject('Order')
+      .findOne({ OrderNumber: orderNumber })
+      .destroy();
+
+    if (!orderByNumber.length)
+      return 'We have not found an order that matches this number, try with another identifier';
+
+    return 'Order successfully deleted';
+  }
+
   public async findAccounts(): Promise<any> {
     await this.login();
 
-    return new Promise((resolve, reject) => {
-      // @ts-expect-error
-      this.connection.query('SELECT Id, Name FROM Account', (err, result) => {
-        if (err) {
-          console.error('Error querying Salesforce:', err);
-          return reject(err);
-        } else {
-          return resolve(result.records);
-        }
-      });
-    });
+    return JSON.stringify(await this.connection.sobject('Account').find());
   }
 }

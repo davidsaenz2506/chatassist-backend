@@ -5,6 +5,7 @@ import {
   ISalesforceRepository,
   SALESFORCE_REPOSITORY,
 } from 'src/domain/salesforce/interfaces/salesforce.repository';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class OpenAIService implements IOpenAIService {
@@ -14,15 +15,11 @@ export class OpenAIService implements IOpenAIService {
   constructor(
     @Inject(SALESFORCE_REPOSITORY)
     private readonly salesforceRepository: ISalesforceRepository,
+    private readonly httpService: HttpService,
   ) {
     this.openAi = new OpenAI({
       apiKey: process.env.OPENAI_ENGINE_API_KEY,
     });
-  }
-
-  private async getSalesforceAccounts() {
-    const response = await this.salesforceRepository.findAccounts();
-    return JSON.stringify(response);
   }
 
   async createThread(): Promise<string> {
@@ -52,6 +49,42 @@ export class OpenAIService implements IOpenAIService {
               name: 'get_salesforce_accounts',
               description:
                 'Get all salesforce accounts in general, using the respective function',
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'destroy_order_by_number',
+              description:
+                'You will remove the order from the order number that the user provides you, if they provide you with a value that is not a salesforce order number, you must tell them that you cannot do that action',
+              parameters: {
+                type: 'object',
+                properties: {
+                  orderNumber: {
+                    type: 'string',
+                    description: 'The Salesforce order number',
+                  },
+                },
+                required: ['orderNumber'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'answer_frequently_asked_questions',
+              description:
+                'Answer all questions related to FAQs and company policies',
+              parameters: {
+                type: 'object',
+                properties: {
+                  question: {
+                    type: 'string',
+                    description:
+                      'Question that the client will be asking about the policies or FAQs',
+                  },
+                },
+              },
             },
           },
         ],
@@ -137,6 +170,22 @@ export class OpenAIService implements IOpenAIService {
     }
   }
 
+  private async getFAQsAnswerByCustomerQuestion(
+    question: string,
+  ): Promise<string> {
+    const response = await this.httpService
+      .get(`${process.env.NGROK_COLAB_SERVER_URI}/questions/${question}`)
+      .toPromise();
+
+    const answer = response.data.value.toString();
+    return answer;
+  }
+
+  private async getSalesforceAccounts() {
+    const response = await this.salesforceRepository.findAccounts();
+    return JSON.stringify(response);
+  }
+
   private async waitForActiveRunToFinish(threadId: string): Promise<void> {
     try {
       const runs = await this.openAi.beta.threads.runs.list(threadId);
@@ -159,12 +208,34 @@ export class OpenAIService implements IOpenAIService {
     const toolOutputs = [];
 
     for (const toolCall of requiredAction.submit_tool_outputs.tool_calls) {
-      const { name: functionName } = toolCall.function;
-      if (functionName === 'get_salesforce_accounts') {
-        toolOutputs.push({
-          tool_call_id: toolCall.id,
-          output: 'Accounts: ' + (await this.getSalesforceAccounts()),
-        });
+      const { name: functionName, arguments: args } = toolCall.function;
+      switch (functionName) {
+        case 'get_salesforce_accounts':
+          const salesforceAccounts = await this.getSalesforceAccounts();
+          toolOutputs.push({
+            tool_call_id: toolCall.id,
+            output: 'Accounts: ' + salesforceAccounts,
+          });
+          break;
+
+        case 'destroy_order_by_number':
+          const { orderNumber } = JSON.parse(args);
+          toolOutputs.push({
+            tool_call_id: toolCall.id,
+            output:
+              await this.salesforceRepository.destroyOrderByOrderNumber(
+                orderNumber,
+              ),
+          });
+          break;
+
+        case 'answer_frequently_asked_questions':
+          const { question } = JSON.parse(args);
+          toolOutputs.push({
+            tool_call_id: toolCall.id,
+            output: await this.getFAQsAnswerByCustomerQuestion(question),
+          });
+          break;
       }
     }
 
