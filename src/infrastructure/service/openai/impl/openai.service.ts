@@ -80,6 +80,23 @@ export class OpenAIService implements IOpenAIService {
           {
             type: 'function',
             function: {
+              name: 'get_order_by_number',
+              description: 'You will get the details of a Salesforce order',
+              parameters: {
+                type: 'object',
+                properties: {
+                  orderNumber: {
+                    type: 'string',
+                    description: 'The Salesforce order number',
+                  },
+                },
+                required: ['orderNumber'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
               name: 'answer_frequently_asked_questions',
               description:
                 'Answer all questions related to FAQs and company policies',
@@ -229,11 +246,22 @@ export class OpenAIService implements IOpenAIService {
           break;
 
         case 'destroy_order_by_number':
-          const { orderNumber } = JSON.parse(args);
+          const { orderNumber: orderNumberToDestroy } = JSON.parse(args);
           toolOutputs.push({
             tool_call_id: toolCall.id,
             output:
               await this.salesforceRepository.destroyOrderByOrderNumber(
+                orderNumberToDestroy,
+              ),
+          });
+          break;
+
+        case 'get_order_by_number':
+          const { orderNumber } = JSON.parse(args);
+          toolOutputs.push({
+            tool_call_id: toolCall.id,
+            output:
+              await this.salesforceRepository.getOrderByOrderNumber(
                 orderNumber,
               ),
           });

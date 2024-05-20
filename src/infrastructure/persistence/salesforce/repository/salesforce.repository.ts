@@ -39,6 +39,19 @@ export class SalesforceRepository implements ISalesforceRepository {
     return 'Order successfully deleted';
   }
 
+  public async getOrderByOrderNumber(orderNumber: string): Promise<string> {
+    await this.login();
+
+    const orderByNumber = await this.connection
+      .sobject('Order')
+      .findOne({ OrderNumber: orderNumber });
+
+    if (!orderByNumber)
+      return 'We have not found an order that matches this number, try with another identifier';
+
+    return JSON.stringify(orderByNumber);
+  }
+
   public async findAccounts(): Promise<any> {
     await this.login();
 
