@@ -16,8 +16,6 @@ import {
   OPENAI_SERVICE,
 } from 'src/infrastructure/service/openai/openai.service';
 
-import * as jsforce from 'jsforce';
-
 @Injectable()
 export class ThreadService implements IThreadService {
   constructor(

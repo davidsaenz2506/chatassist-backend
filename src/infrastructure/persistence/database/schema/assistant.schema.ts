@@ -3,6 +3,7 @@ import { IUser } from 'src/domain/user/user.entity';
 
 import { Document } from 'mongoose';
 import { IAssistant } from 'src/domain/assistant/assistant.entity';
+import { AssistantTool } from 'openai/resources/beta/assistants';
 
 @Schema()
 export class Assistant implements IAssistant {
@@ -15,6 +16,8 @@ export class Assistant implements IAssistant {
   description: string;
   @Prop({ type: String, required: true, unique: true })
   assistantId: string;
+  @Prop({ type: Array, required: true, unique: false })
+  assistantTools: AssistantTool[];
   @Prop({ type: Object, default: null })
   createdBy: IUser;
   @Prop({ type: Object, default: null })

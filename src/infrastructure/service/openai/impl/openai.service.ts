@@ -6,6 +6,7 @@ import {
   SALESFORCE_REPOSITORY,
 } from 'src/domain/salesforce/interfaces/salesforce.repository';
 import { HttpService } from '@nestjs/axios';
+import { IAssistant } from 'src/domain/assistant/assistant.entity';
 
 @Injectable()
 export class OpenAIService implements IOpenAIService {
@@ -39,80 +40,12 @@ export class OpenAIService implements IOpenAIService {
     }
   }
 
-  async createAssistant(
-    assistantName: string,
-    assistantDescription: string,
-  ): Promise<string> {
+  async createAssistant(assistant: Partial<IAssistant>): Promise<string> {
     try {
       const newAssistant = await this.openAi.beta.assistants.create({
-        name: assistantName,
-        description: assistantDescription,
-        tools: [
-          {
-            type: 'code_interpreter',
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'get_salesforce_accounts',
-              description:
-                'Get all salesforce accounts in general, using the respective function',
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'destroy_order_by_number',
-              description:
-                'You will remove the order from the order number that the user provides you, if they provide you with a value that is not a salesforce order number, you must tell them that you cannot do that action',
-              parameters: {
-                type: 'object',
-                properties: {
-                  orderNumber: {
-                    type: 'string',
-                    description: 'The Salesforce order number',
-                  },
-                },
-                required: ['orderNumber'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'get_order_by_number',
-              description: 'You will get the details of a Salesforce order',
-              parameters: {
-                type: 'object',
-                properties: {
-                  orderNumber: {
-                    type: 'string',
-                    description: 'The Salesforce order number',
-                  },
-                },
-                required: ['orderNumber'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'answer_frequently_asked_questions',
-              description:
-                'Answer all questions related to FAQs and company policies',
-              parameters: {
-                type: 'object',
-                properties: {
-                  question: {
-                    type: 'string',
-                    description:
-                      'Question that the client will be asking about the policies or FAQs',
-                  },
-                },
-              },
-            },
-          },
-        ],
+        name: assistant.name,
+        description: assistant.description,
+        tools: assistant.assistantTools,
         model: this.engineModel,
       });
 

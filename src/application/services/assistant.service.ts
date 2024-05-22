@@ -21,10 +21,7 @@ export class AssistantService implements IAssistantService {
   ) {}
   async create(assistant: Partial<IAssistant>): Promise<IAssistant> {
     const now = new Date();
-    const assistantId = await this.openAiService.createAssistant(
-      assistant.name,
-      assistant.description,
-    );
+    const assistantId = await this.openAiService.createAssistant(assistant);
 
     const auditInfo: IAudit = {
       createdBy: null,
